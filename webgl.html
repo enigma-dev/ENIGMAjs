@@ -1,0 +1,109 @@
+<html>
+  <head>
+    <title>ENIGMA HTML5 interface--Hey, the event system works!</title>
+    <script type="text/javascript" src="graphics/glMatrix.js"></script>
+    <script type="text/javascript" src="main/system.js"></script>
+    <script type="text/javascript" src="main/events.js"></script>
+    <script type="text/javascript" src="main/object.js"></script>
+    <script type="text/javascript" src="parser/parse_basics.js"></script>
+    <script type="text/javascript" src="parser/parse_system.js"></script>
+    <script type="text/javascript" src="parser/parser.js"></script>
+    <script type="text/javascript" src="universal/math.js"></script>
+    <script type="text/javascript" src="universal/strings.js"></script>
+    <script type="text/javascript" src="universal/object_planar.js"></script>
+    <script type="text/javascript" src="universal/loading.js"></script>
+    <script type="text/javascript" src="universal/rooms.js"></script>
+    <script type="text/javascript" src="universal/input.js"></script>
+    <script type="text/javascript" src="graphics/depth.js"></script>
+    <script type="text/javascript" src="graphics/drawing.js"></script>
+    <script type="text/javascript" src="platform/dialog.js"></script>
+    <script type="text/javascript" src="ide_edit/objects.js"></script>
+  </head>
+  <body onload="enigma.system.init(document.getElementById('enigma_canvas'))">
+    <script type="text/javascript">
+      function syntaxcheck() {
+        enigma.parser.parse_edl(document.getElementById("code").value);
+        document.getElementById("output").innerHTML = enigma.parser.err + "<br/>" + enigma.parser.code_out;
+      }
+    </script>
+    <div id="output">Press syntax check button.</div>
+<textarea id="code" cols="89" rows="7">
+
+sin(1); draw_diamond(0,1,2,3);
+
+</textarea><br/>
+    <button type="button" onclick="syntaxcheck(); void(0)">Syntax check</button>
+    <br/><br/>WebGL Canvas:<br/>
+    <script id="shader-fs" type="x-shader/x-fragment">
+/*************************************************************\
+Copyright (C) 2011 Josh Ventura
+
+This file is a part of the ENIGMA Development Environment.
+
+ENIGMA is free software: you can redistribute it and/or 
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation, version 3 of
+the license or any later version.
+
+This application and its source code is distributed AS-IS,
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See
+the GNU General Public License for more details.
+
+You should have recieved a copy of the GNU General Public License
+along with this code. If not, see <http://www.gnu.org/licenses/>
+\*************************************************************/
+
+#ifdef GL_ES
+precision highp float;
+#endif
+
+varying vec4 vColor;
+
+void main(void) {
+    gl_FragColor = vColor;
+}
+    </script>
+    
+    <script id="shader-vs" type="x-shader/x-vertex">
+/*************************************************************\
+Copyright (C) 2011 Josh Ventura
+
+This file is a part of the ENIGMA Development Environment.
+
+ENIGMA is free software: you can redistribute it and/or 
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation, version 3 of
+the license or any later version.
+
+This application and its source code is distributed AS-IS,
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See
+the GNU General Public License for more details.
+
+You should have recieved a copy of the GNU General Public License
+along with this code. If not, see <http://www.gnu.org/licenses/>
+\*************************************************************/
+attribute vec3 vertex;
+attribute vec4 color;
+
+uniform mat4 uMVMatrix;
+uniform mat4 uPMatrix;
+uniform vec4 uColor;
+uniform bool useUniformColor;
+
+varying vec4 vColor;
+
+void main(void) {
+    gl_Position = uPMatrix * uMVMatrix * vec4(vertex, 1.0);
+    if (useUniformColor)
+      vColor = uColor;
+    else
+      vColor = color;
+}
+    </script>
+    <center>
+      <canvas id="enigma_canvas" width="640" height="480"></canvas>
+    </center>
+  </body>
+</html>
