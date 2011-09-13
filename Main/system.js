@@ -19,112 +19,22 @@ along with this code. If not, see <http://www.gnu.org/licenses/>
 
 var gl;
 var enigma = {
-  system:  {}, // Holds system methods. Init stuff, event iteration stuff. Boring stuff.
-  parser:  {}, // Holds the parser. This does the majority of the conversion work.
-  graphics:{}, // Like system, but for graphics utils.
-  global:  {}, // Holds ENIGMA's global variables and functions. Like room_speed. Or draw_text.
-  classes: {}, // Anything that doesn't fit into system that drives the backend of the engine.
-  objects: {}  // 
+  system:   {}, // Holds system methods. Init stuff, event iteration stuff. Boring stuff.
+  parser:   {}, // Holds the parser. This does the majority of the conversion work.
+  graphics: {}, // Like system, but for graphics utils.
+  global:   {}, // Holds ENIGMA's global variables and functions. Like room_speed. Or draw_text.
+  classes:  {}, // Anything that doesn't fit into system that drives the backend of the engine.
+  objects:  {}  // 
 }
 enigma.system.init = (function()
 {
-  function getShader(gl, id)
-  {
-    var shaderScript = document.getElementById(id);
-    if (!shaderScript) {
-        return null;
-    }
-    
-    var str = "";
-    var k = shaderScript.firstChild;
-    while (k) {
-        if (k.nodeType == 3) {
-            str += k.textContent;
-        }
-        k = k.nextSibling;
-    }
-    
-    var shader;
-    if (shaderScript.type == "x-shader/x-fragment")
-      shader = gl.createShader(gl.FRAGMENT_SHADER);
-    else if (shaderScript.type == "x-shader/x-vertex")
-      shader = gl.createShader(gl.VERTEX_SHADER);
-    else
-      return null;
-    
-    gl.shaderSource(shader, str);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        alert(gl.getShaderInfoLog(shader));
-        return null;
-    }
-
-    return shader;
-  }
-    
-  function initShaders()
-  {
-    var fragmentShader = getShader(gl, "shader-fs");
-    var vertexShader = getShader(gl, "shader-vs");
-    
-    enigma.graphics.shaderProgram = gl.createProgram();
-    gl.attachShader(enigma.graphics.shaderProgram, vertexShader);
-    gl.attachShader(enigma.graphics.shaderProgram, fragmentShader);
-    gl.linkProgram(enigma.graphics.shaderProgram);
-    
-    if (!gl.getProgramParameter(enigma.graphics.shaderProgram, gl.LINK_STATUS)) {
-        alert("Could not initialise shaders");
-    }
-    
-    gl.useProgram(enigma.graphics.shaderProgram);
-    
-    enigma.graphics.ATTRL_VERTEX = gl.getAttribLocation(enigma.graphics.shaderProgram, "vertex");
-    enigma.graphics.ATTRL_COLOR = gl.getAttribLocation(enigma.graphics.shaderProgram, "color");
-    gl.enableVertexAttribArray(enigma.graphics.ATTRL_VERTEX);
-    gl.enableVertexAttribArray(enigma.graphics.ATTRL_COLOR);
-    
-    enigma.graphics.shaderProgram.pMatrixUniform = gl.getUniformLocation(enigma.graphics.shaderProgram, "uPMatrix");
-    enigma.graphics.shaderProgram.mvMatrixUniform = gl.getUniformLocation(enigma.graphics.shaderProgram, "uMVMatrix");
-    enigma.graphics.ATTRL_U_COLOR = gl.getUniformLocation(enigma.graphics.shaderProgram, "uColor");
-    enigma.graphics.USE_UNICOLOR = gl.getUniformLocation(enigma.graphics.shaderProgram, "useUniformColor");
-  }
-  
-  
   return function(canvas)
   {
-    if (canvas == null)
-      alert("Passed null canvas. Check IDs.");
-    enigma.graphics.canvas = canvas;
-    gl = null;
-    try {
-      gl = canvas.getContext("webgl");
-    } catch (err) {}
-    if (!gl) {
-      try {
-        gl = canvas.getContext("experimental-webgl");
-      } catch (err) {}
-    }
-    if (!gl) {
-      alert("Failed to init WebGL. Your browser probably doesn't support it.");
-      return 1;
-    }
+    enigma.graphics.initialize(canvas);
     
     window.onmousemove = enigma.system.onmousemove;
     window.onmouseover = enigma.system.onmouseover;
     window.onmouseout = enigma.system.onmouseout;
-    
-    enigma.graphics.mvMatrix = mat4.create();
-    enigma.graphics.pMatrix = mat4.create();
-    
-    initShaders();
-
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.enable(gl.DEPTH_TEST);
-    gl.enable(gl.SCISSOR_TEST);
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
-    //gl.blendFunc(gl.SRC_ALPHA,gl.DST_ALPHA);
     
     enigma.system.loadResources();
     setTimeout("enigma.system.enigma_frame_timer()",1000/enigma.global.room_speed);
