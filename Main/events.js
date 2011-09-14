@@ -61,6 +61,7 @@ var rarray = (function()
     function register_event(nev,id1,id2) {
       nev.id1 = id1; nev.id2 = id2;
       nev.lin_id = linear_events.length;
+      nev.callbacks=new Array;
       linear_events.push(nev);
       if (!event_lookup[id1])
         event_lookup[id1] = new Array();
@@ -69,9 +70,10 @@ var rarray = (function()
     function register_event_stacked(nev,id1,namefunc) {
       nev.id1 = id1; nev.namefunc = namefunc;
       nev.lin_id = linear_events.length;
+      nev.callbacks=new Array;
       linear_events.push(nev);
       if (!event_lookup[id1])
-        event_lookup[id1] = new Object;
+        event_lookup[id1] = nev;
     }
     
     nev = new enigma_event("Begin Step",null,null,null,
@@ -88,17 +90,18 @@ var rarray = (function()
       "{ if ((alarm[%1] == -1) or (alarm[%1]--)) return 0; }"
     ); register_event_stacked(nev,2,rnum);
     
+    nev = new enigma_event("Key Press %s",
+    	      function(id2) { return enigma.global.keyboard_check_pressed(id2); }
+    	    ); register_event_stacked(nev,9,rkey);
+    
     nev = new enigma_event("Keyboard %s", 
-      function() { return keyboard_check(this.id2); }
+      function(id2) { return enigma.global.keyboard_check(id2); }
     ); register_event_stacked(nev,5,rkey);
     
-    nev = new enigma_event("Key Press %s",
-      function() { return keyboard_check_pressed(this.id2); }
-    ); register_event_stacked(nev,9,rkey);
 
     nev = new enigma_event("Key Release %s",
-      function() { return keyboard_check_released(this.id2); }
-    ); register_event_stacked(nev,9,rkey);
+      function(id2) { return enigma.global.keyboard_check_released(id2); }
+    ); register_event_stacked(nev,10,rkey);
 
     // There are a million different specialized mouse events.
     // These are frequently-used sub checks.
@@ -258,23 +261,35 @@ var rarray = (function()
       // Linear event iteration
       for (var lei = 0; lei < linear_events.length; lei++)
       {
-        if (!linear_events[lei].supcheck || linear_events[lei].supcheck())
-        {
-          if (!linear_events[lei].handler)
+    	  if (linear_events[lei].handler) { linear_events[lei].handler(); continue;}
+    	  if (linear_events[lei].callbacks.length==0) continue; 
+          
             for (ENIGMA_INSTANCE_EVENT_ITERATOR in linear_events[lei].callbacks)
-              linear_events[lei].callbacks[ENIGMA_INSTANCE_EVENT_ITERATOR]();
-          else
-            linear_events[lei].handler();
-        }
+              {
+            	if (!linear_events[lei].supercheck || linear_events[lei].supercheck(linear_events[lei].callbacks[ENIGMA_INSTANCE_EVENT_ITERATOR].id2))
+            	{enigma.global.current_instance=linear_events[lei].callbacks[ENIGMA_INSTANCE_EVENT_ITERATOR].whom;
+            		linear_events[lei].callbacks[ENIGMA_INSTANCE_EVENT_ITERATOR]();}
+              }
       }
     }
   ,
-    function(id,id1,id2,callback) {
-      var ev = event_lookup[id1];
-      if (!ev) return;
-      ev = ev[id2]
-      if (!ev) return;
-      linear_events[ev.lin_id].callbacks[id] = callback;
+    function(id,id1,id2,callback,whom) {
+      var ev1 = event_lookup[id1];
+      if (!ev1) return;
+      var ev2 = ev1[id2];
+      
+      if (!ev2) {
+    	  // stacked event
+    	  linear_events[ev1.lin_id].callbacks[id] = callback.bind(whom);
+    	  linear_events[ev1.lin_id].callbacks[id].id2=id2;
+    	  linear_events[ev1.lin_id].callbacks[id].whom=whom; //tgmg temp
+      }
+      else {
+    	 
+      linear_events[ev2.lin_id].callbacks[id] = callback.bind(whom);
+      linear_events[ev2.lin_id].callbacks[id].id2=id2;
+      linear_events[ev2.lin_id].callbacks[id].whom=whom; //tgmg
+      }
     }
   ];
 })();
