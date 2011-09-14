@@ -29,8 +29,6 @@ enigma.global.draw_clear.argc_max = 1;
 
 enigma.global.draw_diamond = function(x,y,x2,y2,outline)
 {
-	//Canvas commands go here
-	// Create the yellow face
 	context.strokeStyle = "#000000";
 	context.fillStyle = "#FFFF00";
 	context.beginPath();
