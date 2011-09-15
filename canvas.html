@@ -1,0 +1,43 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>ENIGMA HTML5 Canvas!</title>
+    
+    <script type="text/javascript" src="./Main/system.js"></script>
+    <script type="text/javascript" src="./Graphics/Canvas/Canvasmain.js"></script>
+    <script type="text/javascript" src="./Universal/GameGlobals.js"></script>
+    <script type="text/javascript" src="./Main/events.js"></script>
+    <script type="text/javascript" src="./Main/object.js"></script>
+    <script type="text/javascript" src="./Parser/parse_basics.js"></script>
+    <script type="text/javascript" src="./Parser/parse_system.js"></script>
+    <script type="text/javascript" src="./Parser/parser.js"></script>
+    <script type="text/javascript" src="./Universal/math.js"></script>
+    <script type="text/javascript" src="./Universal/strings.js"></script>
+    <script type="text/javascript" src="./Universal/object_planar.js"></script>
+    <script type="text/javascript" src="./Universal/input.js"></script>
+    <script type="text/javascript" src="./Universal/loading.js"></script>
+    <script type="text/javascript" src="./Universal/rooms.js"></script>
+    <script type="text/javascript" src="./Graphics/Canvas/Canvasdepth.js"></script>
+    <script type="text/javascript" src="./Graphics/Canvas/Canvasdrawing.js"></script>
+    <script type="text/javascript" src="./Platform/dialog.js"></script>
+    <script type="text/javascript" src="./ide_edit/objects.js"></script>
+    <script type="text/javascript" src="./Universal/actions.js"></script>
+    <script type="text/javascript" src="./ide_edit/ideedit_loading.js"></script>
+  </head><style type="text/css">embed[type*="application/x-shockwave-flash"],embed[src*=".swf"],object[type*="application/x-shockwave-flash"],object[codetype*="application/x-shockwave-flash"],object[src*=".swf"],object[codebase*="swflash.cab"],object[classid*="D27CDB6E-AE6D-11cf-96B8-444553540000"],object[classid*="d27cdb6e-ae6d-11cf-96b8-444553540000"],object[classid*="D27CDB6E-AE6D-11cf-96B8-444553540000"]{	display: none !important;}</style>
+  <body onload="enigma.system.init(document.getElementById(&#39;enigma_canvas&#39;))">
+    <script type="text/javascript">
+      function syntaxcheck() {
+        enigma.parser.parse_edl(document.getElementById("code").value);
+        document.getElementById("output").innerHTML = enigma.parser.err + "<br/>" + enigma.parser.code_out;
+      }
+    </script>
+    <div id="output">Press syntax check button.</div>
+<textarea id="code" cols="89" rows="7">for a=0 a&lt;10 a++ b=c
+for a=0 a=10 a=7 b. /* Comment for no reason */ room_speed = c
+room_speed = 10</textarea><br>
+    <button type="button" onclick="syntaxcheck(); void(0)">Syntax check</button>
+    <br><br>Canvas:<br>
+    <center>
+      <canvas id="enigma_canvas" width="640" height="480"></canvas>
+    </center>
+  
+
+</body></html>
