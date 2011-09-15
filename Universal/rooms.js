@@ -59,3 +59,88 @@ enigma.global.view_yport   = [0,0,0,0,0,0,0,0];
 enigma.global.view_yview   = [0,0,0,0,0,0,0,0];
 enigma.global.view_angle   = [0,0,0,0,0,0,0,0];
 
+var room; //current room id
+enigma.global.room_goto=function(indx)
+{
+	if (indx < 0 || indx >= room_idmax || !roomarray[indx])
+		return enigma.global.show_error("Attempting to go to nonexisting room");
+	roomarray[indx].gotome();
+	return 0;
+};
+
+enigma.global.room_restart=function()
+{
+	var indx=room;
+	roomarray[indx].gotome();
+	return 0;
+};
+
+enigma.global.room_get_name=function(index)
+{
+	if (index < 0 || index >= room_idmax || !roomarray[index])
+		return enigma.global.show_error("Room index out of range");
+	return roomarray[index].name;
+};
+
+
+enigma.global.room_count=function() {
+  return roomarray.length;
+};
+
+enigma.global.room_goto_first=function()
+{
+    var rit = roomarray[roomorder[0]];
+    if (0 >= roomorder.length) 
+    	return enigma.global.show_error("Game must have at least one room to do anything");
+    rit.gotome();
+    return 0;
+}
+
+enigma.global.room_goto_next=function()
+{
+    var rit = roomarray[room];
+
+    if (rit.order+1 < 0 || rit.order+1 >= roomorder.length) 
+		return enigma.global.show_error("Going to next room after last");
+    
+    rit = roomarray[roomorder[rit.order + 1]];
+
+    rit.gotome();
+    return 0;
+}
+
+enigma.global.room_goto_previous=function()
+{
+    var rit = roomarray[room];
+
+    if (rit.order-1 < 0 || rit.order-1 >= roomorder.length) 
+		return enigma.global.show_error("Going to previous room after first");
+    
+    rit = roomarray[roomorder[rit.order - 1]];
+    
+    rit.gotome();
+    return 0;
+};
+
+/*
+ * Return index of room after num
+ */
+enigma.global.room_next=function(num)
+{
+    if (num < 0 || num >= room_idmax)
+      return -1;
+    var rit = roomarray[num];
+    if (!rit || rit.order+1 >= roomorder.length)
+      return -1;
+    return roomarray[roomorder[rit.order + 1]].id;
+}
+enigma.global.room_previous=function(num)
+{
+    if (num < 0 || num >= room_idmax)
+      return -1;
+    var rit = roomarray[num];
+    if (!rit || rit.order-1 < 0)
+      return -1;
+    return roomarray[roomorder[rit.order - 1]].id;
+}
+//order, roomorder,
