@@ -24,7 +24,8 @@ var enigma = {
   graphics: {}, // Like system, but for graphics utils.
   global:   {}, // Holds ENIGMA's global variables and functions. Like room_speed. Or draw_text.
   classes:  {}, // Anything that doesn't fit into system that drives the backend of the engine.
-  objects:  {}  // 
+  objects:  {},  // 
+  rooms: {}
 }
 enigma.system.init = (function()
 {
