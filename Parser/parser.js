@@ -75,7 +75,11 @@ enigma.parser.parse_edl = (function()
     
     ps.err = "No error";
     lex = new Array();
+    var in_decl = false;
+    var decl_rhs = false;
+    
     lex.push_is = function() {
+      in_decl = false;
       if (open_parenths.length && open_parenths[open_parenths.length-1].type == '?')
       {
         var ts = open_parenths.pop();
@@ -98,6 +102,24 @@ enigma.parser.parse_edl = (function()
     function superPos() {};
     superPos.toString = function() { return mymacroind ? mymacrostack[0].pos : pos; }
     superPos.valueOf  = function() { return mymacroind ? mymacrostack[0].pos : pos; }
+    
+    var local_ext = { type: "scriptlocal", namespace: "" };
+    var scopes = [{}];
+    var push_scope = enigma.parser.setting.usecppscopes ?
+       function() { scopes.push({}); } :
+       function() { };
+    var pop_scope = enigma.parser.setting.usecppscopes ?
+       function() { scopes.pop(); } :
+       function() { };
+    function is_script_local(name) {
+      for (var i = scopes.length-1; i > 0; i--)
+        if (scopes[i][name] != undefined)
+          return true;
+      return scopes[0][name] != undefined;
+    }
+    function script_local_add(name) {
+      scopes[scopes.length-1][name] = 1;
+    }
     
     for (pos = 0; pos < code.length; )
     {
@@ -146,9 +168,30 @@ enigma.parser.parse_edl = (function()
             continue;
         }
         
-        not_a_macro:
-        if (EDL_Keywords.is_wordop(name)) { //this is actually a word-based operator, such as `and', `or', and `not' 
-          var unary = name[0] == 'n'; //not is the only unary word operator.
+        //not_a_macro:
+        
+        if (EDL_Keywords.is_statement(name)) // Our control statements
+        {
+          if (!lex.top().separator || lex.top().operatorlike)
+          {
+            if (lex.top().breakandfollow)
+              lex.push_is();
+            else
+            {
+              if (lex.top().operatorlike)
+                return (ps.err = "Expected secondary expression before `" + name + "'", superPos);
+              if (lex.top().type != ps.TT.S_ELSE && lex.top().type != ps.TT.S_TRY)
+                return (ps.err = "Unexpected `" + name + "' statement at this point", superPos);
+            }
+          }
+          var mt = EDL_Keywords.statement_type(name);
+          lex.push(new token(mt, name, superPos, name.length, false, EDL_Keywords.breakAndFollow(mt), EDL_Keywords.operatorLike(mt), mymacroind));
+          continue;
+        }
+        
+        if (EDL_Keywords.is_wordop(name)) //this is actually a word-based operator, such as `and', `or', and `not' 
+        {
+          var unary = name[0] == 'n'; //not is the only unary word operator. It's also the only word op that starts with n.
           if (unary && (!lex.top().separator && !lex.top().operatorlike)) {
             ps.err = "Unexpected unary keyword `not'";
             return pos;
@@ -158,6 +201,23 @@ enigma.parser.parse_edl = (function()
             return pos;
           }
           lex.push(new token(unary ? ps.TT.UNARYPRE : ps.TT.OPERATOR, name, superPos, name.length, false, false, true, mymacroind));
+          continue;
+        }
+        
+        if (in_decl && !decl_rhs) {
+          if (!lex.top().operatorlike && lex.top().breakandfollow)
+            lex.push_is();
+          else
+          {
+            script_local_add(name);
+            lex.push(new token(ps.TT.DECLNAME, name, superPos, name.length, false, true, false, mymacroind, local_ext));
+            continue;
+          }
+        }
+        if (is_script_local(name)) {
+          if (!lex.top().operatorlike && lex.top().breakandfollow)
+            lex.push_is();
+          lex.push(new token(ps.TT.VARNAME, name, superPos, name.length, false, true, false, mymacroind, local_ext));
           continue;
         }
         
@@ -174,6 +234,8 @@ enigma.parser.parse_edl = (function()
                   lex.push_is();
                 lex.push(new token(ps.TT.TYPE_NAME, name, superPos, name.length, false, false, false, mymacroind, ext_retriever_var));
               }
+              in_decl = true;
+              decl_rhs = false;
               continue;
             }
             
@@ -201,25 +263,6 @@ enigma.parser.parse_edl = (function()
             }
         }
         
-        if (EDL_Keywords.is_statement(name)) // Our control statements
-        {
-          if (!lex.top().separator || lex.top().operatorlike)
-          {
-            if (lex.top().breakandfollow)
-              lex.push_is();
-            else
-            {
-              if (lex.top().operatorlike)
-                return (ps.err = "Expected secondary expression before `" + name + "'", superPos);
-              if (lex.top().type != ps.TT.S_ELSE && lex.top().type != ps.TT.S_TRY)
-                return (ps.err = "Unexpected `" + name + "' statement at this point", superPos);
-            }
-          }
-          var mt = EDL_Keywords.statement_type(name);
-          lex.push(new token(mt, name, superPos, name.length, false, EDL_Keywords.breakAndFollow(mt), EDL_Keywords.operatorLike(mt), mymacroind));
-          continue;
-        }
-        
         if (!lex.top().operatorlike && lex.top().breakandfollow)
           lex.push_is();
         
@@ -242,6 +285,7 @@ enigma.parser.parse_edl = (function()
         case ';':
             if (lex.top().operatorlike) { ps.err = "Expected secondary expression before semicolon"; return superPos; }
             lex.push(new token(ps.TT.SEMICOLON, ";", superPos, 1, true, false, false, mymacroind));
+            in_decl = false;
           pos++; continue;
         case ':':
             if (code[pos+1] == '=')
@@ -272,6 +316,7 @@ enigma.parser.parse_edl = (function()
           continue;
         case ',':
             lex.push(new token(ps.TT.COMMA, ",", superPos, 1, true, false, true, mymacroind));
+            decl_rhs = false;
           pos++; continue;
         case '$': {
             var spos = pos;
@@ -483,7 +528,8 @@ enigma.parser.parse_edl = (function()
               return superPos;
             }
             sz = (code[pos+1] == '=') + 1;
-            lex.push(new token(sz==2 ? ps.TT.OPERATOR : ps.TT.ASSOP, sz==1?"=":"==", superPos, sz, false, false, true, mymacroind)), pos += sz; 
+            lex.push(new token(sz==2 ? ps.TT.OPERATOR : ps.TT.ASSOP, sz==1?"=":"==", superPos, sz, false, false, true, mymacroind)), pos += sz;
+            decl_rhs = true;
           break;
         default:
             ps.err = "Unexpected symbol `" + code.substr(pos,1) + "': unknown to compiler";
@@ -792,7 +838,9 @@ enigma.parser.parse_edl = (function()
     
     ps.code_out = "";
     var with_start = -1, with_end = -1;
-    try {
+    var scopes = [];
+    try
+    {
       for (var i = 0; i < lex.length; i++)
       {
         if (lex[i].type == ps.TT.GEN_STATEMENT && lex[i].content == "with")
@@ -818,15 +866,19 @@ enigma.parser.parse_edl = (function()
           with_start = with_end = -1;
         if (with_start == -1 || i < with_start)
         {
-          if (lex[i].ext && lex[i].ext.namespace && lex[i].ext.namespace != "")
-            ps.code_out += lex[i].ext.namespace + ".";
+          if (lex[i].ext && (lex[i].ext.namespace || lex[i].ext.namespace == "")) {
+            if (lex[i].ext.namespace != "")
+              ps.code_out += lex[i].ext.namespace + ".";
+          }
           else if ((!i || lex[i-1].type != ps.TT.DECIMAL) && lex[i].type == ps.TT.VARNAME)
             ps.code_out += "this.";
         }
         else
         {
-          if (lex[i].ext && lex[i].ext.namespace && lex[i].ext.namespace != "")
-            ps.code_out += (lex[i].ext.namespace == "this" ? "enigma.system.with_obj" : lex[i].ext.namespace) + ".";
+          if (lex[i].ext && (lex[i].ext.namespace || lex[i].ext.namespace == "")) {
+            if (lex[i].ext.namespace != "")
+              ps.code_out += (lex[i].ext.namespace == "this" ? "enigma.system.with_obj" : lex[i].ext.namespace) + ".";
+          }
           else if ((!i || lex[i-1].type != ps.TT.DECIMAL) && lex[i].type == ps.TT.VARNAME)
             ps.code_out += "enigma.system.with_obj.";
         }
