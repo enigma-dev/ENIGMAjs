@@ -24,7 +24,8 @@ var enigma = {
   graphics: {}, // Like system, but for graphics utils.
   global:   {}, // Holds ENIGMA's global variables and functions. Like room_speed. Or draw_text.
   classes:  {}, // Anything that doesn't fit into system that drives the backend of the engine.
-  objects:  {}  // 
+  objects:  {},  // 
+  rooms: {}
 }
 enigma.system.init = (function()
 {
@@ -45,4 +46,5 @@ var room_bgcolor = 0;
 enigma.system.enigma_frame_timer = function () {
   setTimeout("enigma.system.enigma_frame_timer()",1000/enigma.global.room_speed);
   enigma.system.event_loop();
+  enigma.global.io_handle();
 }
