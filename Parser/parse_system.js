@@ -64,6 +64,7 @@ enigma.parser.TT = {
   S_CATCH         :  36, // catch
   S_DO            :  37, // do
   S_NEW           :  38, // new
+  DECLNAME        :  39, // 'a' in 'var a;'
   
   PARSED_WITH: 45, // with -> for
   
