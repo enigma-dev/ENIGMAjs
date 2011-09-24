@@ -17,8 +17,12 @@ You should have recieved a copy of the GNU General Public License
 along with this code. If not, see <http://www.gnu.org/licenses/>
 \*************************************************************/
 
-function show_message(message) {
+enigma.global.show_message=function(message) {
   alert(message);
-}
-show_message.argc_min = 1;
-show_message.argc_max = 1;
+};
+enigma.global.show_message.argc_min = 1;
+enigma.global.show_message.argc_max = 1;
+
+enigma.global.show_error=function(message) {
+	  alert(message);
+	};

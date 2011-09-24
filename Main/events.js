@@ -291,6 +291,20 @@ var rarray = (function()
       linear_events[ev2.lin_id].callbacks[id].whom=whom; //tgmg
       }
     }
+  ,
+  function(id,id1,id2,callback,whom) {
+    var ev1 = event_lookup[id1];
+    if (!ev1) return;
+    var ev2 = ev1[id2];
+    
+    if (!ev2) {
+  	  // stacked event
+  	  delete linear_events[ev1.lin_id].callbacks[id];
+    }
+    else 
+    delete linear_events[ev2.lin_id].callbacks[id];
+    
+  }
   ];
 })();
 
@@ -301,3 +315,4 @@ enigma.system.event_loop = rarray[0];
  * as function() @param callback.
  * */
 enigma.system.event_loop.link_event = rarray[1];
+enigma.system.event_loop.unlink_event = rarray[2];
