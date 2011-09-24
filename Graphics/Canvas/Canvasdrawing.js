@@ -44,3 +44,57 @@ enigma.global.draw_sprite_ext=function(sprite_index,image_index,
         xx,yy,image_xscale,image_yscale,image_angle,image_blend,image_alpha){
 	context.drawImage(spritestructarray[sprite_index].image, xx, yy);
 };
+
+enigma.global.draw_sprite=function(sprite, subimg, x, y)  {
+	context.drawImage(spritestructarray[sprite].image, x, y);
+};
+
+enigma.global.draw_text=function(x,y,text){
+	context.fillText(text, x, y);
+};
+
+enigma.global.draw_set_font=function(fontid){
+	var font = fontstructarray[fontid];
+	var fontstring ="";
+	if (font.bold) fontstring+=" bold ";
+	if (font.italic) fontstring+=" italic ";
+	fontstring+=" "+font.size+"px "
+	fontstring+=" "+font.fontName;
+	context.font = fontstring;
+};
+
+var fa_left = 0;
+var fa_center = 1;
+var fa_right = 2;
+var fa_top = 0;
+var fa_middle = 1;
+var fa_bottom = 2;
+
+enigma.global.draw_set_halign=function(align){
+	if (align==fa_left)
+	context.textAlign="left"; 
+	else if (align==fa_center)
+		context.textAlign="center"; 
+	if (align==fa_right)
+		context.textAlign="right"; 
+};
+
+enigma.global.draw_set_valign=function(align){
+	if (align==fa_top)
+	context.textBaseline="top"; 
+	else if (align==fa_middle)
+		context.textBaseline="middle"; 
+	if (align==fa_bottom)
+		context.textBaseline="bottom"; 
+};
+
+enigma.global.draw_line=function(x,y,xx,yy){
+	context.moveTo(x, y);
+	  context.lineTo(xx, yy);
+	  context.stroke();
+};
+
+enigma.global.draw_set_color=function(color) {
+	//presume color is correctly formatting string
+	//context.fillStyle=color;
+};

@@ -51,4 +51,4 @@ enigma.objects.object0 = function(id,oid,x,y) {
   this.dir = 0;
 }
 
-var instance = new enigma.objects.object0();
+//var instance = new enigma.objects.object0();
